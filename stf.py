@@ -2,7 +2,7 @@ menu_stocks = {}
 stocks = {}
 id = 0
 
-def init():
+def start():
     global menu_stocks, stocks, id
     f = open("stf.csv", "r")
     f.readline()
@@ -26,20 +26,30 @@ def add():
     value = int(input("value: "))
     menu_stocks[id] = name
     stocks[name] = [amount, value]
-    
+
 def delete():
+    global menu_stocks, stocks
+    print(menu_stocks)
+    d_choice = int(input("Delete Choice: "))
+    for m_key in list(menu_stocks):
+        if d_choice == m_key:
+            del menu_stocks[m_key]
+    for s_key in list(stocks):
+        if s_key not in menu_stocks.values():
+            del stocks[s_key]
+
+def show():
     global menu_stocks, stocks
     list = []
     for menu_key, menu_value in menu_stocks.items():
         list.extend([menu_key, menu_value])
         for s_key, s_value in stocks.items():
             if s_key == menu_value:
-                list.append(s_value)
+                list.extend([s_value[0], s_value[1]])
     print(list)
-    d_choice = input("Delete Choice: ")
     
 
-init()
+start()
 
 while 1:
     choice = int(input("Enter Choice: "))
@@ -49,6 +59,8 @@ while 1:
         add()
     elif choice == 98:
         delete()
+    elif choice == 0:
+        show()
 
 print(menu_stocks)
 print(stocks)
