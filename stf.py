@@ -1,58 +1,112 @@
+import csv
+
 menu_stocks = {}
 stocks = {}
 id = 0
 
-def start():
-    global menu_stocks, stocks, id
+reset_history = []
+reset_sales = []
+
+sales = open("sales.csv", "w")
+sales_reset = csv.writer(sales)
+sales_reset.writerows(reset_sales)
+
+history = open("history.csv", "w")
+history_reset = csv.writer(history)
+history_reset.writerows(reset_history)
+
+def init():
+    global menu_stocks, stocks, id, header
     f = open("stf.csv", "r")
-    f.readline()
+    header = f.readline()
     line = f.readline()
 
     while line:
+        id = id + 1
         token = line
         tokens = token.split(',')
-        menu_stocks[int(tokens[0])] = tokens[1]
-        stocks[tokens[1]] = [int(tokens[2]), int(tokens[3])]
-        id = int(token[0])
+        menu_stocks[id] = tokens[0]
+        stocks[tokens[0]] = [int(tokens[1]), int(tokens[2])]
         line = f.readline()
     
     f.close()
 
 def add():
-    global menu_stocks, stocks, id
+    global menu_stocks, stocks, id, amount, header
     id = id + 1
-    name = input("name: ")
-    amount = int(input("amount: "))
-    value = int(input("value: "))
+    name = input("Enter Name: ")
+    amount = int(input("Enter Amount: "))
+    value = int(input("Enter Value: "))
+    history = open("history.csv", "a")
+    history.write(name + "\n" + str(amount) + "\n" + str(value) + "\n")
+    history.close()
     menu_stocks[id] = name
     stocks[name] = [amount, value]
+    f = open("stf.csv", "w")
+    f.write(header)
+    for key, value in stocks.items():
+        f.write(key + "," + str(value[0]) + "," + str(value[1]) + "\n")
+    f.close()
 
 def delete():
-    global menu_stocks, stocks
-    print(menu_stocks)
-    d_choice = int(input("Delete Choice: "))
+    global menu_stocks, stocks, header
+    d_choice = int(input("Enter ID: "))
+    f = open("stf.csv", "w")
     for m_key in list(menu_stocks):
         if d_choice == m_key:
             del menu_stocks[m_key]
     for s_key in list(stocks):
         if s_key not in menu_stocks.values():
             del stocks[s_key]
+    f.write(header)
+    for key, value in stocks.items():
+        f.write(key + "," + str(value[0]) + "," + str(value[1]) + "\n")
+    f.close()
 
-def show():
-    global menu_stocks, stocks
-    list = []
-    for menu_key, menu_value in menu_stocks.items():
-        list.extend([menu_key, menu_value])
-        for s_key, s_value in stocks.items():
-            if s_key == menu_value:
-                list.extend([s_value[0], s_value[1]])
-    print(list)
+def sell(key, amount):
+    global stocks
+    print(f"Sell {key}, amount: {stocks[key][0]}")
+    if stocks[key][0] >= amount:
+        stocks[key][0] = stocks[key][0] - amount
+        print(f"sell {key}: {stocks[key][1] * amount}")
+    else:
+        print(f"Cannot sell {key}")
     
+def print_store():
+    print("==========STF============")
+    for key, item in stocks.items():
+        print(f"{key}:{item}")
 
-start()
+def print_menu():
+    for key, item in menu_stocks.items():
+        print(f"{key}. Buy {item}")
+    print("97. Insert Item")
+    print("98. Remove Item")
+    print("99. Bye")
+    print("0. Print Stock")
+    print("=========================")
+
+def save():
+    global menu_stocks, stocks, id
+    menu_stocks_list = list(menu_stocks.items())
+    for key, value in stocks.items():
+        menu_stocks_list.append(value)
+    f = open("stf.csv", "w", newline='')
+    wt = csv.writer(f, delimiter=',')
+    wt.writerows(menu_stocks_list)
+    print(menu_stocks_list)
+
+init()
 
 while 1:
+    print_store()
+    print_menu()
+
     choice = int(input("Enter Choice: "))
+    history = open("history.csv", "a")
+    history.write(str(choice) + "\n")
+    history.close()
+
     if choice == 99:
         break
     elif choice == 97:
@@ -60,11 +114,7 @@ while 1:
     elif choice == 98:
         delete()
     elif choice == 0:
-        show()
-
-print(menu_stocks)
-print(stocks)
-'''save()
-def save():
-    f = open("stf.csv", "w", encoding="utf8")
-    f.write(",".join)'''
+        print_store()
+    else:
+        amount = int(input("Enter amount: "))
+        sell(menu_stocks[choice], amount)
